@@ -22,17 +22,17 @@
 // can't assume that its in that state when a sketch starts (and the
 // LiquidCrystal constructor is called).
 
-LiquidCrystal_I2C::LiquidCrystal_I2C(uint8_t lcd_addr, uint8_t lcd_cols, uint8_t lcd_rows, uint8_t charsize)
-{
-	_addr = lcd_addr;
-	_cols = lcd_cols;
-	_rows = lcd_rows;
-	_charsize = charsize;
-	_backlightval = LCD_BACKLIGHT;
-}
+LiquidCrystal_I2C::LiquidCrystal_I2C(uint8_t lcd_addr, uint8_t lcd_cols, uint8_t lcd_rows, uint8_t charsize /*= LCD_5x8DOTS*/, TwoWire & bus /*= defaultWire()*/ )
+	: _addr(lcd_addr)
+	, _cols(lcd_cols)
+	, _rows(lcd_rows)
+	, _charsize(charsize)
+	, _backlightval(LCD_BACKLIGHT)
+	, _i2cBus(bus)
+{}
 
 void LiquidCrystal_I2C::begin() {
-	Wire.begin();
+	_i2cBus.begin();
 	_displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 
 	if (_rows > 1) {
@@ -196,6 +196,10 @@ bool LiquidCrystal_I2C::getBacklight() {
   return _backlightval == LCD_BACKLIGHT;
 }
 
+TwoWire & LiquidCrystal_I2C::defaultWire()
+{
+	return Wire;
+}
 
 /*********** mid level commands, for sending data/cmds */
 
@@ -225,9 +229,9 @@ void LiquidCrystal_I2C::write4bits(uint8_t value) {
 }
 
 void LiquidCrystal_I2C::expanderWrite(uint8_t _data){
-	Wire.beginTransmission(_addr);
-	Wire.write((int)(_data) | _backlightval);
-	Wire.endTransmission();
+	_i2cBus.beginTransmission(_addr);
+	_i2cBus.write((int)(_data) | _backlightval);
+	_i2cBus.endTransmission();
 }
 
 void LiquidCrystal_I2C::pulseEnable(uint8_t _data){
